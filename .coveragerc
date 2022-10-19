@@ -1,8 +1,8 @@
 [run]
-source = project_name
+source = health_notification_manager
 
 [report]
 omit =
     */python?.?/*
     */site-packages/nose/*
-    project_name/__main__.py
+    health_notification_manager/__main__.py

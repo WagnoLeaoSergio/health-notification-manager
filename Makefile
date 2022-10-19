@@ -26,20 +26,20 @@ install:          ## Install the project in dev mode.
 
 .PHONY: fmt
 fmt:              ## Format code using black & isort.
-	$(ENV_PREFIX)isort project_name/
-	$(ENV_PREFIX)black -l 79 project_name/
+	$(ENV_PREFIX)isort health_notification_manager/
+	$(ENV_PREFIX)black -l 79 health_notification_manager/
 	$(ENV_PREFIX)black -l 79 tests/
 
 .PHONY: lint
 lint:             ## Run pep8, black, mypy linters.
-	$(ENV_PREFIX)flake8 project_name/
-	$(ENV_PREFIX)black -l 79 --check project_name/
+	$(ENV_PREFIX)flake8 health_notification_manager/
+	$(ENV_PREFIX)black -l 79 --check health_notification_manager/
 	$(ENV_PREFIX)black -l 79 --check tests/
-	$(ENV_PREFIX)mypy --ignore-missing-imports project_name/
+	$(ENV_PREFIX)mypy --ignore-missing-imports health_notification_manager/
 
 .PHONY: test
 test: lint        ## Run tests and generate coverage report.
-	$(ENV_PREFIX)pytest -v --cov-config .coveragerc --cov=project_name -l --tb=short --maxfail=1 tests/
+	$(ENV_PREFIX)pytest -v --cov-config .coveragerc --cov=health_notification_manager -l --tb=short --maxfail=1 tests/
 	$(ENV_PREFIX)coverage xml
 	$(ENV_PREFIX)coverage html
 
@@ -80,9 +80,9 @@ release:          ## Create a new tag for release.
 	@read -p "Version? (provide the next x.y.z semver) : " TAG
 	@echo "creating git tag : $${TAG}"
 	@git tag $${TAG}
-	@echo "$${TAG}" > project_name/VERSION
+	@echo "$${TAG}" > health_notification_manager/VERSION
 	@$(ENV_PREFIX)gitchangelog > HISTORY.md
-	@git add project_name/VERSION HISTORY.md
+	@git add health_notification_manager/VERSION HISTORY.md
 	@git commit -m "release: version $${TAG} 🚀"
 	@git push -u origin HEAD --tags
 	@echo "Github Actions will detect the new tag and release the new version."
@@ -101,7 +101,7 @@ switch-to-poetry: ## Switch to poetry package manager.
 	@poetry init --no-interaction --name=a_flask_test --author=rochacbruno
 	@echo "" >> pyproject.toml
 	@echo "[tool.poetry.scripts]" >> pyproject.toml
-	@echo "project_name = 'project_name.__main__:main'" >> pyproject.toml
+	@echo "health_notification_manager = 'health_notification_manager.__main__:main'" >> pyproject.toml
 	@cat requirements.txt | while read in; do poetry add --no-interaction "$${in}"; done
 	@cat requirements-test.txt | while read in; do poetry add --no-interaction "$${in}" --dev; done
 	@poetry install --no-interaction
@@ -109,7 +109,7 @@ switch-to-poetry: ## Switch to poetry package manager.
 	@mv requirements* .github/backup
 	@mv setup.py .github/backup
 	@echo "You have switched to https://python-poetry.org/ package manager."
-	@echo "Please run 'poetry shell' or 'poetry run project_name'"
+	@echo "Please run 'poetry shell' or 'poetry run health_notification_manager'"
 
 .PHONY: init
 init:             ## Initialize the project based on an application template.
@@ -118,27 +118,27 @@ init:             ## Initialize the project based on an application template.
 .PHONY: shell
 shell:            ## Open a shell in the project.
 	@if [ "$(USING_POETRY)" ]; then poetry shell; exit; fi
-	@./.venv/bin/ipython -c "from project_name import *"
+	@./.venv/bin/ipython -c "from health_notification_manager import *"
 
 .PHONY: docker-build
 docker-build:	  ## Builder docker images
-	@docker-compose -f docker-compose-dev.yaml -p project_name build
+	@docker-compose -f docker-compose-dev.yaml -p health_notification_manager build
 
 .PHONY: docker-run
 docker-run:  	  ## Run docker development images
-	@docker-compose -f docker-compose-dev.yaml -p project_name up -d
+	@docker-compose -f docker-compose-dev.yaml -p health_notification_manager up -d
 
 .PHONY: docker-stop
 docker-stop: 	  ## Bring down docker dev environment
-	@docker-compose -f docker-compose-dev.yaml -p project_name down
+	@docker-compose -f docker-compose-dev.yaml -p health_notification_manager down
 
 .PHONY: docker-ps
 docker-ps: 	  ## Bring down docker dev environment
-	@docker-compose -f docker-compose-dev.yaml -p project_name ps
+	@docker-compose -f docker-compose-dev.yaml -p health_notification_manager ps
 
 .PHONY: docker-log
 docker-logs: 	  ## Bring down docker dev environment
-	@docker-compose -f docker-compose-dev.yaml -p project_name logs -f app
+	@docker-compose -f docker-compose-dev.yaml -p health_notification_manager logs -f app
 
 # This project has been generated from rochacbruno/fastapi-project-template
 # __author__ = 'rochacbruno'
