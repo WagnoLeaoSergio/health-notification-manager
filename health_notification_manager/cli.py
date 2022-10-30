@@ -10,7 +10,6 @@ from .security import User
 
 cli = typer.Typer(name="health_notification_manager API")
 
-
 @cli.command()
 def run(
     port: int = settings.server.port,

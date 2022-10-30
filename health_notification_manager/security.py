@@ -72,6 +72,8 @@ class User(SQLModel, table=True):
     password: HashedPassword
     superuser: bool = False
     disabled: bool = False
+    email: str = None
+    scheduler_id: Optional[str] = None
 
     # it populates the .user attribute on the Content Model
     contents: List["Content"] = Relationship(back_populates="user")

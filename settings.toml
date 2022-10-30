@@ -3,6 +3,7 @@ dynaconf_merge = true
 
 [development.db]
 echo = true
+uri = "sqlite:///development.db"
 
 [development.server]
 log_level = "debug"
