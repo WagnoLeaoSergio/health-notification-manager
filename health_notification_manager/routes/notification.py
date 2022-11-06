@@ -1,10 +1,14 @@
 from fastapi import APIRouter
 import logging
+import smtplib
 from typing import Union
 from pydantic import BaseModel
 from datetime import datetime, timedelta
 from apscheduler.schedulers.background import BackgroundScheduler
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
+from ..config import settings
 from ..security import AuthenticatedUser, User, UserResponse
 
 Scheduler = BackgroundScheduler()
@@ -13,7 +17,48 @@ router = APIRouter()
 
 
 def send_notification(email, message):
-    logging.warning(f"Sending email to {email} with the message {message}.")
+        logging.info(f"Sending email to {email} with the message {message}.")
+
+        SERVER = 'smtp.gmail.com'
+        PORT = 587
+        current_time = datetime.now()
+        source_email = "wagnoleao@gmail.com"
+        source_email_password = settings.source_email_password
+
+        print("TESTE")
+        print(source_email_password)
+
+        body_message = MIMEMultipart()
+        body_message['Subject'] = 'Notification alert of behavior'
+        body_message['Subject'] += ' - '
+        body_message['Subject'] += str(current_time.day) + \
+            '-' + str(current_time.year)
+
+        body_message['From'] = source_email
+        body_message['To'] = email
+        body_message.attach(MIMEText(message, 'plain'))
+
+        logging.info('Initiating server...')
+
+        try:
+            server = smtplib.SMTP(SERVER, PORT)
+            server.set_debuglevel(1)
+            server.ehlo()
+            server.starttls()
+            server.login(source_email, source_email_password)
+            server.sendmail(source_email, email, body_message.as_string())
+        except (
+            smtplib.SMTPHeloError,
+            smtplib.SMTPAuthenticationError,
+            smtplib.SMTPSenderRefused
+        ):
+            logging.warning("Error! Unable to send the email!")
+            return False
+
+        logging.info('Notification was sended.')
+
+        server.quit()
+        return True
 
 
 class Notification(BaseModel):
