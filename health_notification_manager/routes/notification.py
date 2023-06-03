@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 import logging
 import smtplib
-from typing import Union
+from typing import Union, List
 from pydantic import BaseModel
 from datetime import datetime, timedelta
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -16,58 +16,60 @@ Scheduler = BackgroundScheduler()
 router = APIRouter()
 
 
-def send_notification(email, message):
-        logging.info(f"Sending email to {email} with the message {message}.")
+def send_notification(email, message, date=None):
+    logging.info(f"Sending email to {email} with the message {message}.")
 
-        SERVER = 'smtp.gmail.com'
-        PORT = 587
-        current_time = datetime.now()
-        source_email = "wagnoleao@gmail.com"
-        source_email_password = settings.source_email_password
+    SERVER = 'smtp.gmail.com'
+    PORT = 587
+    current_time = datetime.now()
+    source_email = "wagnoleao@gmail.com"
+    source_email_password = settings.source_email_password
 
-        print("TESTE")
-        print(source_email_password)
+    print("TESTE")
+    print(source_email_password)
 
-        body_message = MIMEMultipart()
-        body_message['Subject'] = 'Notification alert of behavior'
-        body_message['Subject'] += ' - '
-        body_message['Subject'] += str(current_time.day) + \
-            '-' + str(current_time.year)
+    body_message = MIMEMultipart()
+    body_message['Subject'] = 'Notification alert of behavior'
+    body_message['Subject'] += ' - '
+    body_message['Subject'] += str(current_time.day) + \
+        '-' + str(current_time.year)
 
-        body_message['From'] = source_email
-        body_message['To'] = email
-        body_message.attach(MIMEText(message, 'plain'))
+    body_message['From'] = source_email
+    body_message['To'] = email
+    body_message.attach(MIMEText(message, 'plain'))
 
-        logging.info('Initiating server...')
+    logging.info('Initiating server...')
 
-        try:
-            server = smtplib.SMTP(SERVER, PORT)
-            server.set_debuglevel(1)
-            server.ehlo()
-            server.starttls()
-            server.login(source_email, source_email_password)
-            server.sendmail(source_email, email, body_message.as_string())
-        except (
-            smtplib.SMTPHeloError,
-            smtplib.SMTPAuthenticationError,
-            smtplib.SMTPSenderRefused
-        ):
-            logging.warning("Error! Unable to send the email!")
-            return False
+    try:
+        server = smtplib.SMTP(SERVER, PORT)
+        server.set_debuglevel(1)
+        server.ehlo()
+        server.starttls()
+        server.login(source_email, source_email_password)
+        server.sendmail(source_email, email, body_message.as_string())
+    except (
+        smtplib.SMTPHeloError,
+        smtplib.SMTPAuthenticationError,
+        smtplib.SMTPSenderRefused
+    ):
+        logging.warning("Error! Unable to send the email!")
+        return False
 
-        logging.info('Notification was sended.')
+    logging.info('Notification was sended.')
 
-        server.quit()
-        return True
+    server.quit()
+    return True
 
 
 class Notification(BaseModel):
     id: str
+    date: str
     email: str
-    day: int
-    hour: int
-    minute: int
     message: Union[str, None] = None
+
+
+class ScheduledNotifications(BaseModel):
+    notifications: List[Notification]
 
 
 days_of_week = {
@@ -98,22 +100,28 @@ async def get_notifications():
 
 
 @router.post("/")
-async def set_notification(notification: Notification):
-    Scheduler.add_job(
-            send_notification, 
+async def set_notification(schedules: ScheduledNotifications):
+    logging.info(schedules)
+    for notification in schedules.notifications:
+        date = datetime.strptime(notification.date, '%Y-%m-%d %H:%M:%S')
+        weekday = date.weekday() + 1
+
+        Scheduler.add_job(
+            send_notification,
             'cron',
-            day_of_week=days_of_week[notification.day],
-            hour=notification.hour,
-            minute=notification.minute,
+            day_of_week=days_of_week[weekday],
+            hour=date.hour,
+            minute=date.minute,
             id=notification.id,
             coalesce=True,
             misfire_grace_time=60,
             replace_existing=True,
             jobstore='notifications',
-            args=[ notification.email, notification.message ]
-    )
-    return { "ok": True }
+            args=[notification.email, notification.message, date]
+        )
+    return {"ok": True}
+
 
 @router.delete("/")
 async def reset_notifications():
-    return { "ok": False }
+    return {"ok": False}
