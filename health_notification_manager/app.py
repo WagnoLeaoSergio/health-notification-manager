@@ -10,7 +10,6 @@ from .routes import main_router
 from .routes.notification import Scheduler
 
 
-
 def read(*paths, **kwargs):
     """Read the contents of a text file safely.
     >>> read("VERSION")
@@ -60,11 +59,11 @@ app.include_router(main_router)
 def on_startup():
     create_db_and_tables(engine)
 
-    Scheduler.add_jobstore('sqlalchemy', alias="notifications", url="sqlite:///scheduler.db")
-    #Scheduler.remove_all_jobs()
+    Scheduler.add_jobstore(
+        'sqlalchemy', alias="notifications", url="sqlite:///scheduler.db")
+    # Scheduler.remove_all_jobs()
 
     try:
         Scheduler.start()
     except (KeyboardInterrupt, SystemExit):
         logging.warning("Error while creating scheduler")
-
