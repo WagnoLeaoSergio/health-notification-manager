@@ -1,6 +1,7 @@
-from fastapi import APIRouter
 import logging
 import smtplib
+from fastapi import APIRouter
+from fastapi.encoders import jsonable_encoder
 from typing import Union, List
 from pydantic import BaseModel
 from datetime import datetime, timedelta
@@ -15,15 +16,18 @@ Scheduler = BackgroundScheduler()
 
 router = APIRouter()
 
+logger = logging.getLogger("uvicorn")
+
 
 def send_notification(email, message, date=None):
-    logging.info(f"Sending email to {email} with the message {message}.")
+    logger.info(f"Sending email to {email} with the message {message}.")
 
     SERVER = 'smtp.gmail.com'
     PORT = 587
     current_time = datetime.now()
     source_email = "wagnoleao@gmail.com"
-    source_email_password = settings.source_email_password
+    source_email_password = "mkjukgtsajmeornl"
+    # source_email_password = settings.source_email_password
 
     print("TESTE")
     print(source_email_password)
@@ -38,7 +42,7 @@ def send_notification(email, message, date=None):
     body_message['To'] = email
     body_message.attach(MIMEText(message, 'plain'))
 
-    logging.info('Initiating server...')
+    logger.info('Initiating server...')
 
     try:
         server = smtplib.SMTP(SERVER, PORT)
@@ -52,10 +56,10 @@ def send_notification(email, message, date=None):
         smtplib.SMTPAuthenticationError,
         smtplib.SMTPSenderRefused
     ):
-        logging.warning("Error! Unable to send the email!")
+        logger.warning("Error! Unable to send the email!")
         return False
 
-    logging.info('Notification was sended.')
+    logger.info('Notification was sended.')
 
     server.quit()
     return True
@@ -96,14 +100,16 @@ async def get_notifications():
                 "misfire_grace_time": job.misfire_grace_time,
             }
         ])
+    print(response)
     return response
 
 
 @router.post("/")
 async def set_notification(schedules: ScheduledNotifications):
-    logging.info(schedules)
-    for notification in schedules.notifications:
-        date = datetime.strptime(notification.date, '%Y-%m-%d %H:%M:%S')
+    logger.info(schedules)
+    schedules_data = jsonable_encoder(schedules)
+    for notification in schedules_data["notifications"]:
+        date = datetime.strptime(notification["date"], '%Y-%m-%d %H:%M:%S')
         weekday = date.weekday() + 1
 
         Scheduler.add_job(
@@ -112,12 +118,12 @@ async def set_notification(schedules: ScheduledNotifications):
             day_of_week=days_of_week[weekday],
             hour=date.hour,
             minute=date.minute,
-            id=notification.id,
+            id=notification["id"],
             coalesce=True,
             misfire_grace_time=60,
             replace_existing=True,
             jobstore='notifications',
-            args=[notification.email, notification.message, date]
+            args=[notification["email"], notification["message"], date]
         )
     return {"ok": True}
 
