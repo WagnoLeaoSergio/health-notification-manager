@@ -1,9 +1,6 @@
 # health_notification_manager
 
-[![codecov](https://codecov.io/gh/WagnoLeaoSergio/health-notification-manager/branch/main/graph/badge.svg?token=health-notification-manager_token_here)](https://codecov.io/gh/WagnoLeaoSergio/health-notification-manager)
-[![CI](https://github.com/WagnoLeaoSergio/health-notification-manager/actions/workflows/main.yml/badge.svg)](https://github.com/WagnoLeaoSergio/health-notification-manager/actions/workflows/main.yml)
-
-Awesome health_notification_manager created by WagnoLeaoSergio
+Serviço de agendamento e gerenciamento de notificações de saúde.
 
 ## Install
 
